@@ -1,0 +1,130 @@
+sudo apt install default-jre
+
+exp 5a
+sudo rm /var/lib/dpkg/lock-frontend
+sudo dpkg --configure -a
+
+sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager qemu-system
+
+sudo nano /etc/libvirt/libvirtd.conf
+
+listen_addr = "0.0.0.0"
+unix_sock_group = "libvirt"
+unix_sock_ro_perms = "0777"
+unix_sock_rw_perms = "0777"
+unix_sock_dir = "/var/run/libvirt"
+auth_unix_ro = "none"
+auth_unix_rw = "none"
+
+sudo systemctl restart libvirtd
+
+virt-manager
+wget https://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img
+
+exp 5b
+virt-manager
+https://releases.ubuntu.com/16.04/ -> ubuntu - 16.04 server iso
+
+qemu-img create -f qcow2 ubuntu_vm.qcow2 10G
+
+sudo qemu-img resize ubuntu_vm.qcow2 +10G
+
+qemu-img convert -O vdi ubuntu_vm.qcow2 ubuntu_vm.vdi -p
+qemu-img convert -O vpc ubuntu_vm.qcow2 ubuntu_vm.vdi -p
+qemu-img convert -O raw ubuntu_vm.qcow2 ubuntu_vm.vdi -p
+
+exp 6
+#http file transfer
+sudo ufw disable
+python3 -m http.server 8080
+
+#shared folder
+sudo apt install build-essential dkms linux-headers-$(uname -r)
+sudo usermod -aG vboxsf $USER
+sudo reboot
+ls /media/sf_SharedFolder
+
+#ftp
+sudo apt install vsftpd
+sudo nano /etc/vsftpd.conf
+
+listen=YES
+write_enable=YES
+pasv_enable=YES
+pasv_min_port=40000
+pasv_max_port=40100 
+
+chroot_local_user = YES
+listen_ipv6 = NO
+
+sudo adduser ftpuser
+sudo chmod a-w /home/ftpuser
+sudo mkdir /home/ftpuser/uploads
+sudo chown ftpuser:ftpuser /home/ftpuser/uploads
+sudo ufw disable
+
+sudo systemctl daemon-reload
+sudo systemctl enable vsftpd
+sudo systemctl status vsftpd
+
+login to ftpuser & create file in "uploads" directory
+
+vm2: ftp <ip> in other vm
+vm2: create another file & upload it to ftpserver
+
+#nfs
+sudo ufw disable
+server vm: sudo apt install nfs-kernel-server
+client vm: sudo apt install nfs-common
+
+server vm: sudo mkdir -p /mnt/sharedfolder
+sudo chmod 777 /mnt/sharedfolder
+sudo nano /etc/exports
+/mnt/sharedfolder 192.168.56.0/24(rw,sync,no_subtree_check)
+
+sudo exportfs -a
+sudo systemctl restart nfs-kernel-server
+
+client vm:
+sudo mkdir -p /mnt/nfsshare
+sudo mount <server ip>:/mnt/sharedfolder /mnt/nfsshare
+
+create files in /mnt/nfsshare and check it in server vm
+
+#ssh
+both vm:
+sudo apt install openssh-server -y
+sudo ufw disable
+
+ssh <username>@<ip>
+
+create file in vm2 & check it in vm1
+
+exp 9
+sudo -s
+brctl addbr br-cloud
+brctl addif br-cloud enp0s3
+ifconfig enp0s3 0
+ifconfig br-cloud 10.0.2.20 netmask 255.255.255.0
+route add default gw 10.0.2.2 dev br-cloud
+ip link set br-cloud up
+
+#verifying
+ip a
+route -n
+brctl show
+
+exp 10
+#verifying
+sudo -s
+fdisk -l
+pvdisplay
+vgdisplay
+lvdisplay
+
+pvcreate /dev/sdb
+vgextend ubuntu-vg /dev/sdb
+lvresize --size +3G /dev/ubuntu-vg/root
+resize2fs /dev/mapper/ubuntu--vg-root
+
+df -h
