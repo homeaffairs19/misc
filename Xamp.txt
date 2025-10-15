@@ -1,0 +1,152 @@
+*Ping vm-vm
+sudo adduser suj
+sudo usermod -aG sudo suj
+ip a
+ping 10.0.2.15
+
+
+*cold migration
+*file -> export appliance
+
+*KVM
+lscpu
+grep -c 'lm' /proc/cpuinfo
+sudo apt install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
+sudo systemctl enable --now libvirtd.service
+sudo usermod -aG libvirt,kvm $USER
+sudo reboot now
+sudo virsh net-start default
+
+https://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img
+
+*kvm -conversion
+qemu-img create -f qcow2 ubuntu_vm.qcow2 10G
+qemu-img convert -O vdi ubuntu_vm.qcow2 ubuntu_vm.vdi -p
+qemu-img convert -O vpc ubuntu_vm.qcow2 ubuntu_vm.vhd -p
+qemu-img convert -O raw ubuntu_vm.qcow2 ubuntu_vm.img -p
+
+qemu-img info ubuntu_vm.qcow2
+qemu-img info ubuntu_vm.vdi
+qemu-img info ubuntu_vm.vhd
+qemu-img info ubuntu_vm.img
+
+*Kvm -resizing
+sudo qemu-img resize ubuntu_vm.qcow2 +10G
+qemu-img info ubuntu_vm.qcow2
+
+
+*File Transfer
+
+*ssh
+
+*vm1
+sudo apt update
+sudo apt install openssh-server
+sudo systemctl enable --now ssh
+ip a
+
+*vm2
+sftp user_name@ipaddress
+put file.txt
+get file.txt
+
+
+*ftp
+
+sudo apt install vsftpd
+sudo nano /etc/vsftpd.conf
+	anonymous_enable=no
+	local_enable=yes
+	write_enable=yes
+sudo systemclt restart vsftpd
+sudo ufw allow 20/tcp
+sudo ufw allow 21/tcp
+
+*vm2
+sudo apt install ftp
+ftp ipad
+
+*http
+
+touch file.txt
+python3 -m http.server 8000
+
+*vm2
+wget http://ipadres:8000/file.txt
+
+*nfs
+
+sudo apt install nfs-kernel-server
+sudo mkdir -p /srv/nfs/k
+sudo chown nobody:nogroup /srv/nfs/k
+sudo chmod 777 /srv/nfs/k
+cd /srv/nfs/k
+touch h.txt
+sudo nano /etc/exports
+
+/srv/nfs/k ipvm2(rw,sync,no_subtree_check,no_root_squash)
+
+sudo exportfs -a
+sudo systemctl restart nfs-kernel-server
+
+*vm2
+sudo apt install nfs-common
+sudo mkdir -p /mnt/nfs/k
+sudo mount ipadddres:/srv/nfs/k /mnt/nfs/k
+
+*Shared Folder
+*vm 
+cd /media
+ls
+*you see sf_shared
+chmod 777 /media/sf_shared
+sudo usermod -aG vboxsf $USER
+
+
+*OpenStack
+sudo snap install microstack --beta
+snap list microstack
+sudo apt install python-is-python3
+sudo microstack init --auto --control
+
+sudo snap get microstack config.credentials.keystone-password
+
+*enter ip in firefox -username("admin") -Password(will be in above cmd)
+
+
+
+*OpenSWitch
+sudo apt install openvswitch-switch -y
+sudo ovs-vsctl add-br ovs-br0
+sudo ovs-vsctl add-port ovs-br0 en0ps3
+sudo ip link set dev ovs-br0 up
+sudo ovs-vsctl show
+
+*Bridge
+sudo apt install bridge-utils -y
+sudo ip link add name br0 type bridge
+sudo ip link set dev br0 up
+sudo ip link set dev enp0s3 master br0
+brctl show
+ip addr show br0
+
+
+*virtual storage or LVM
+sudo -s
+lsblk
+fdisk -h
+sudo pvcreate /dev/sdb
+pvdisplay
+sudo vgcreate vg /dev/sdb
+vgdisplay
+sudo lvcreate -L 10G -n lvp vg
+lvdisplay
+*resize
+sudo lvextend -L +5G /dev/vg/lvp
+lvdisplay
+sudo lvreduce -L 6G /dev/lg/lvp
+lvdisplay
+
+
+ctrl-o enter
+ctrl-x
