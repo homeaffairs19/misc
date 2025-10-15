@@ -1,3 +1,38 @@
+cold migration
+make any program and shut down the vm
+right click on vm and export to oci
+choose location to export
+after than import appliance
+then import launch the vm and run the program
+
+live migration 
+in xen centre click on add new server
+enter the ipaddress 10.10.25.156(probably ur ip) username root password Tce@1234
+right click on server created and select new vm
+select vm template cent os 7 something then next
+name the machine 
+installation media selct the iso file ubuntu
+homeserver let it be tce
+then select everything and click create now
+
+
+the again right click add new server
+same step ip username and password 
+go to ur previous vm and then right click and select move vm
+select the server now as xenserver1
+then it will be migrated
+
+
+
+
+
+
+
+
+
+
+
+
 sudo apt install default-jre
 
 exp 5a
@@ -19,13 +54,22 @@ auth_unix_rw = "none"
 sudo systemctl restart libvirtd
 
 virt-manager
+
 wget https://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img
+then right click on qemu/kvm select create new vm
+then the image we downloaded we have to get that cirros
+choose memory and all shit settings and done
 
 exp 5b
 virt-manager
+neeche file download kar nayi vm bana select local install media)
+choose the file
+select the ram memory bullshit then run the qemu command
 https://releases.ubuntu.com/16.04/ -> ubuntu - 16.04 server iso
-
+before the vm finish run the below command
 qemu-img create -f qcow2 ubuntu_vm.qcow2 10G
+after vm creation we have to run thr below commands
+
 
 sudo qemu-img resize ubuntu_vm.qcow2 +10G
 
@@ -68,7 +112,10 @@ sudo systemctl enable vsftpd
 sudo systemctl status vsftpd
 
 login to ftpuser & create file in "uploads" directory
+echo "helloi from ftp server" > text.txt
+cat text.txt
 
+VM2
 vm2: ftp <ip> in other vm
 vm2: create another file & upload it to ftpserver
 
@@ -128,3 +175,4 @@ lvresize --size +3G /dev/ubuntu-vg/root
 resize2fs /dev/mapper/ubuntu--vg-root
 
 df -h
+
